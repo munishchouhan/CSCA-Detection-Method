@@ -11,41 +11,44 @@ import java.util.Iterator;
 public class Test_RealTimeMonitoring {
 	ArrayList<Double> LLC_Loads_List = new ArrayList<>();
 	ArrayList<Double> LLC_Loads_misses_List = new ArrayList<>();
-	ArrayList<Double> diffrence = new ArrayList<>();
-	double mean = 0;
-	public ArrayList<Double> GenerateMean(){
-		ArrayList<Double> means = new ArrayList<>();
-		
-		mean = 0;
-		diffrence.clear();
-		
-		readlinebyline("data/csca_data_10_200_times_only_gpg.dat");
-		Iterator<Double> CMR_List_Iterator = caculateCMR().iterator();
-		
-		 File dir = new File("data/real_time_data");
-		  File[] directoryListing = dir.listFiles();
-		  if (directoryListing != null) {
-		    for (File file : directoryListing) {
-		readlinebyline("data/real_time_data/"+file.getName());
-		Iterator<Double> live_CMR_List_Iterator = caculateCMR().iterator();
-		
-		while (live_CMR_List_Iterator.hasNext() && CMR_List_Iterator.hasNext()) {
-			double live_CMR = live_CMR_List_Iterator.next();
-			double CMR = CMR_List_Iterator.next();
-			//System.out.println(RSA_CMR + "-" + GPG_CMR);
-			diffrence.add(live_CMR - CMR);
-		}
+	
+	
 
-		Iterator<Double> diffrence_Iterator = diffrence.iterator();
-		//System.out.println("here");
-		while (diffrence_Iterator.hasNext()) {
-			mean += diffrence_Iterator.next();
+	public ArrayList<Double> GenerateMean() {
+		ArrayList<Double> means = new ArrayList<>();
+
+		readlinebyline("data/csca_data_10_200_times_only_gpg.dat");
+
+		File dir = new File("data/real_time_data");
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) {
+			for (File file : directoryListing) {
+				double mean = 0;
+				ArrayList<Double> diffrence = new ArrayList<>();
+				Iterator<Double> CMR_List_Iterator = caculateCMR().iterator();
+				
+				readlinebyline("data/real_time_data/" + file.getName());
+				
+				Iterator<Double> live_CMR_List_Iterator = caculateCMR().iterator();
+				
+				while (live_CMR_List_Iterator.hasNext() && CMR_List_Iterator.hasNext()) {
+					double live_CMR = live_CMR_List_Iterator.next();
+					double CMR = CMR_List_Iterator.next();
+					diffrence.add(live_CMR - CMR);
+				}
+
+				Iterator<Double> diffrence_Iterator = diffrence.iterator();
+				// System.out.println("here");
+				int countmeans = 0;
+				while (diffrence_Iterator.hasNext()) {
+					mean += diffrence_Iterator.next();
+					countmeans++;
+				}
+				mean = mean / countmeans;
+				//System.out.println(mean);
+				means.add(mean);
+			}
 		}
-		mean = mean / 200;
-		
-		means.add(mean);
-		    }
-		  }
 		return means;
 	}
 
@@ -84,7 +87,7 @@ public class Test_RealTimeMonitoring {
 
 		// System.err.println(i);
 	}
-	
+
 	public ArrayList<Double> caculateCMR() {
 		Iterator<Double> LLC_Loads_List_Iterator = LLC_Loads_List.iterator();
 		Iterator<Double> LLC_Loads_misses_List_Iterator = LLC_Loads_misses_List.iterator();

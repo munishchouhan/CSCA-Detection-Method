@@ -2,6 +2,7 @@ package edu.utp.manu;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
@@ -16,6 +17,7 @@ public class GenerateCMRMeanFile {
 	ArrayList<Double> means = new ArrayList<>();
 	
 	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
+		long time = System.currentTimeMillis();
 		GenerateCMRMeanFile GCF = new GenerateCMRMeanFile();
 		
 		GCF.GenerateMeanRSA();
@@ -25,14 +27,15 @@ public class GenerateCMRMeanFile {
 		Iterator<Double> means_iterator = GCF.means.iterator();
 		int count =0;
 		PrintWriter writer = new PrintWriter("data/means.dat", "UTF-8");
-		
+		time = System.currentTimeMillis() - time;
+		System.out.println("execution time: "+time);
 		
 		while(means_iterator.hasNext())
 		{
 			count++;
 			writer.println(means_iterator.next());
 		}
-		System.out.println(count);
+		System.out.println("number of pre-compiled signatures:"+count);
 		writer.close();
 	}
 	
@@ -47,7 +50,10 @@ public class GenerateCMRMeanFile {
 		// printCMR();
 		// GPG_CMR_List = CMR_List;
 
-		for (int i = 4000; i <= 5000; i++) {
+		File dir = new File("data/data_time_slots_rsa");
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) {
+			for (File file : directoryListing) {
 			mean = 0;
 			// RSA_CMR_List.clear();
 			diffrence.clear();
@@ -55,7 +61,7 @@ public class GenerateCMRMeanFile {
 			caculateCMR();
 			Iterator<Double> GPG_CMR_List_Iterator = caculateCMR().iterator();
 
-			readlinebyline("data/data_time_slots_rsa/csca_data_2500_" + i + ".dat");
+			readlinebyline("data/data_time_slots_rsa/"+file.getName());
 
 			Iterator<Double> RSA_CMR_List_Iterator = caculateCMR().iterator();
 
@@ -76,15 +82,18 @@ public class GenerateCMRMeanFile {
 			//System.out.println(mean);
 			means.add(mean);
 		}
+		}
 
 	}
 	public void GenerateMeanDSA() {
 
-		// ArrayList<Double> RSA_CMR_List = new ArrayList<>();
 		ArrayList<Double> diffrence = new ArrayList<>();
 		double mean = 0;
 
-		for (int i = 4000; i <= 5000; i++) {
+		File dir = new File("data/data_time_slots_dsa");
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) {
+			for (File file : directoryListing) {
 			mean = 0;
 			// RSA_CMR_List.clear();
 			diffrence.clear();
@@ -92,11 +101,48 @@ public class GenerateCMRMeanFile {
 			caculateCMR();
 			Iterator<Double> GPG_CMR_List_Iterator = caculateCMR().iterator();
 
-			readlinebyline("data/data_time_slots_dsa/csca_data_2500_" + i + ".dat");
+			readlinebyline("data/data_time_slots_dsa/"+file.getName());
 
 			Iterator<Double> RSA_CMR_List_Iterator = caculateCMR().iterator();
 
-			//System.out.println("DSA here");
+			while (RSA_CMR_List_Iterator.hasNext() && GPG_CMR_List_Iterator.hasNext()) {
+				double RSA_CMR = RSA_CMR_List_Iterator.next();
+				double GPG_CMR = GPG_CMR_List_Iterator.next();
+				diffrence.add(RSA_CMR - GPG_CMR);
+			}
+
+			Iterator<Double> diffrence_Iterator = diffrence.iterator();
+			while (diffrence_Iterator.hasNext()) {
+				mean += diffrence_Iterator.next();
+			}
+			mean = mean / 200;
+			means.add(mean);
+		}
+		}
+
+	}
+	
+	public void GenerateMeanElgamal() {
+
+		ArrayList<Double> diffrence = new ArrayList<>();
+		double mean = 0;
+		File dir = new File("data/data_time_slots_elgamal");
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) {
+			for (File file : directoryListing) {
+			mean = 0;
+			// RSA_CMR_List.clear();
+			diffrence.clear();
+			readlinebyline("data/csca_data_10_200_times_only_gpg_elgamal.dat");
+			caculateCMR();
+			Iterator<Double> GPG_CMR_List_Iterator = caculateCMR().iterator();
+			
+
+
+			readlinebyline("data/data_time_slots_elgamal/"+file.getName());
+
+			Iterator<Double> RSA_CMR_List_Iterator = caculateCMR().iterator();
+
 			while (RSA_CMR_List_Iterator.hasNext() && GPG_CMR_List_Iterator.hasNext()) {
 				double RSA_CMR = RSA_CMR_List_Iterator.next();
 				double GPG_CMR = GPG_CMR_List_Iterator.next();
@@ -113,43 +159,6 @@ public class GenerateCMRMeanFile {
 			//System.out.println(mean);
 			means.add(mean);
 		}
-
-	}
-	
-	public void GenerateMeanElgamal() {
-
-		// ArrayList<Double> RSA_CMR_List = new ArrayList<>();
-		ArrayList<Double> diffrence = new ArrayList<>();
-		double mean = 0;
-
-		for (int i = 4000; i <= 5000; i++) {
-			mean = 0;
-			// RSA_CMR_List.clear();
-			diffrence.clear();
-			readlinebyline("data/csca_data_10_200_times_only_gpg_elgamal.dat");
-			caculateCMR();
-			Iterator<Double> GPG_CMR_List_Iterator = caculateCMR().iterator();
-
-			readlinebyline("data/data_time_slots_elgamal/csca_data_2500_" + i + ".dat");
-
-			Iterator<Double> RSA_CMR_List_Iterator = caculateCMR().iterator();
-
-			//System.out.println("Elgamal here");
-			while (RSA_CMR_List_Iterator.hasNext() && GPG_CMR_List_Iterator.hasNext()) {
-				double RSA_CMR = RSA_CMR_List_Iterator.next();
-				double GPG_CMR = GPG_CMR_List_Iterator.next();
-				//System.out.println(RSA_CMR + "-" + GPG_CMR);
-				diffrence.add(RSA_CMR - GPG_CMR);
-			}
-
-			Iterator<Double> diffrence_Iterator = diffrence.iterator();
-			//System.out.println("here");
-			while (diffrence_Iterator.hasNext()) {
-				mean += diffrence_Iterator.next();
-			}
-			mean = mean / 200;
-			//System.out.println(mean);
-			means.add(mean);
 		}
 
 	}
